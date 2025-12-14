@@ -28,6 +28,8 @@ class MainMenu:
         from prolog_solver import PROLOG_AVAILABLE
         self.prolog_available = PROLOG_AVAILABLE
         self.algorithm = "bfs"
+        self.algorithm_list = ["bfs", "prolog", "lisp"]
+        self.algorithm_idx = 0
     def draw(self):
         self.screen.fill(BG)
 
@@ -43,10 +45,9 @@ class MainMenu:
         control_text = menu_font.render(f"Controls: {self.control_scheme.upper()}  (Tab)", True, TEXT_MAIN)
         diff_text = menu_font.render(f"Difficulty: {self.difficulty}  (Up/Down)", True, TEXT_MAIN)
         guide_text = menu_font.render(f"Guide: {'ON' if self.guide else 'OFF'}  (G)", True, TEXT_MAIN)
-        algo_display = self.algorithm.upper() if self.prolog_available else "BFS ONLY"
-        algo_suffix = "  (A)" if self.prolog_available else ""
-        algo_color = TEXT_MAIN if self.prolog_available else (210, 110, 110)
-        algo_text = menu_font.render(f"Algorithm: {algo_display}{algo_suffix}", True, algo_color)
+        algo_display = self.algorithm.upper()
+        algo_color = TEXT_MAIN
+        algo_text = menu_font.render(f"Algorithm: {algo_display}  (A)", True, algo_color)
 
         self.screen.blit(control_text, (CELL_SIZE * 2, y_base))
         self.screen.blit(diff_text, (CELL_SIZE * 2, y_base + line_gap))
@@ -86,8 +87,9 @@ class MainMenu:
                         self.difficulty = max(self.difficulty - 1, 1)
                     elif event.key == pygame.K_g:
                         self.guide = not self.guide
-                    elif event.key == pygame.K_a and self.prolog_available:
-                        self.algorithm = "prolog" if self.algorithm == "bfs" else "bfs"
+                    elif event.key == pygame.K_a:
+                        self.algorithm_idx = (self.algorithm_idx + 1) % len(self.algorithm_list)
+                        self.algorithm = self.algorithm_list[self.algorithm_idx]
                     elif event.key == pygame.K_RETURN:
                         running = False
         return self.control_scheme, self.difficulty, self.guide, self.algorithm
@@ -96,8 +98,7 @@ def main():
     while True:
         menu = MainMenu()
         control_scheme, difficulty, guide, algorithm = menu.run()
-        use_prolog = algorithm == "prolog"
-        game = Game(control_scheme, difficulty, guide, use_prolog)
+        game = Game(control_scheme, difficulty, guide, algorithm)
         result = game.run()
         if result == "quit":
             break

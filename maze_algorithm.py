@@ -1,16 +1,18 @@
 import random
 from collections import deque
 from prolog_solver import PrologPathfinder
+from lisp_solver import LispPathfinder
 
 DIRS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
 
 class Maze:
-    def __init__(self, width, height, difficulty=1, use_prolog=False):
+    def __init__(self, width, height, difficulty=1, algorithm="bfs"):
         self.width = width
         self.height = height
         self.difficulty = difficulty
-        self.use_prolog = use_prolog
-        self.prolog_solver = PrologPathfinder() if use_prolog else None
+        self.algorithm = algorithm
+        self.prolog_solver = PrologPathfinder() if algorithm == "prolog" else None
+        self.lisp_solver = LispPathfinder() if algorithm == "lisp" else None
         self.maze = self.generate_maze()
 
     def generate_maze(self):
@@ -99,8 +101,10 @@ class Maze:
         return path if path and path[0] == start else []
 
     def bfs_path(self, start, goal):
-        if self.use_prolog and self.prolog_solver:
+        if self.algorithm == "prolog" and self.prolog_solver:
             return self.prolog_solver.find_path(self.maze, start, goal, self.width, self.height)
+        elif self.algorithm == "lisp" and self.lisp_solver:
+            return self.lisp_solver.find_path(self.maze, start, goal, self.width, self.height)
         
         queue = deque([start])
         visited = {start: None}

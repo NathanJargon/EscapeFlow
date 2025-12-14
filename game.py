@@ -22,12 +22,12 @@ HUD_TEXT = (220, 230, 245)
 HUD_ACCENT = (120, 200, 255)
 
 class Game:
-    def __init__(self, control_scheme="arrows", difficulty=1, guide=False, use_prolog=False):
+    def __init__(self, control_scheme="arrows", difficulty=1, guide=False, algorithm="bfs"):
         self.control_scheme = control_scheme
         self.difficulty = difficulty
         self.guide = guide
-        self.use_prolog = use_prolog
-        self.maze = Maze(MAZE_WIDTH, MAZE_HEIGHT, difficulty, use_prolog)
+        self.algorithm = algorithm
+        self.maze = Maze(MAZE_WIDTH, MAZE_HEIGHT, difficulty, algorithm)
         self.player = (1, 1)
         self.exit_pos = (MAZE_WIDTH-2, MAZE_HEIGHT-2)
         self.frame_count = 0
@@ -90,7 +90,7 @@ class Game:
             f"Controls: {self.control_scheme.upper()}",
             f"Difficulty: {self.difficulty}",
             f"Guide: {'ON' if self.guide else 'OFF'}",
-            f"Algo: {'PROLOG' if self.use_prolog else 'BFS'}"
+            f"Algo: {self.algorithm.upper()}"
         ]
         text = "  |  ".join(info)
         label = hud_font.render(text, True, HUD_TEXT)
