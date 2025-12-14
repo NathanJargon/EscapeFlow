@@ -2,6 +2,7 @@ import random
 from collections import deque
 from prolog_solver import PrologPathfinder
 from lisp_solver import LispPathfinder
+from cpp_solver import CppPathfinder
 
 DIRS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
 
@@ -13,6 +14,7 @@ class Maze:
         self.algorithm = algorithm
         self.prolog_solver = PrologPathfinder() if algorithm == "prolog" else None
         self.lisp_solver = LispPathfinder() if algorithm == "lisp" else None
+        self.cpp_solver = CppPathfinder() if algorithm == "cpp" else None
         self.maze = self.generate_maze()
 
     def generate_maze(self):
@@ -105,6 +107,8 @@ class Maze:
             return self.prolog_solver.find_path(self.maze, start, goal, self.width, self.height)
         elif self.algorithm == "lisp" and self.lisp_solver:
             return self.lisp_solver.find_path(self.maze, start, goal, self.width, self.height)
+        elif self.algorithm == "cpp" and self.cpp_solver:
+            return self.cpp_solver.find_path(self.maze, start, goal, self.width, self.height)
         
         queue = deque([start])
         visited = {start: None}

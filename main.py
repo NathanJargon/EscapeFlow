@@ -28,7 +28,7 @@ class MainMenu:
         from prolog_solver import PROLOG_AVAILABLE
         self.prolog_available = PROLOG_AVAILABLE
         self.algorithm = "bfs"
-        self.algorithm_list = ["bfs", "prolog", "lisp"]
+        self.algorithm_list = ["bfs", "lisp", "cpp", "prolog"]
         self.algorithm_idx = 0
     def draw(self):
         self.screen.fill(BG)
