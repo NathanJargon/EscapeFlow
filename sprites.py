@@ -1,7 +1,7 @@
 import pygame
 import math
 
-CELL_SIZE = 40
+CELL_SIZE = 48
 MAZE_WIDTH = 15
 MAZE_HEIGHT = 10
 

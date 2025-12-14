@@ -1,13 +1,16 @@
 import random
 from collections import deque
+from prolog_solver import PrologPathfinder
 
 DIRS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
 
 class Maze:
-    def __init__(self, width, height, difficulty=1):
+    def __init__(self, width, height, difficulty=1, use_prolog=False):
         self.width = width
         self.height = height
         self.difficulty = difficulty
+        self.use_prolog = use_prolog
+        self.prolog_solver = PrologPathfinder() if use_prolog else None
         self.maze = self.generate_maze()
 
     def generate_maze(self):
@@ -55,7 +58,7 @@ class Maze:
         to_pos = None
         wall_positions = [(y, x) for y in range(1, self.height-1) for x in range(1, self.width-1) if self.maze[y][x] == 1]
         empty_positions = [(y, x) for y in range(1, self.height-1) for x in range(1, self.width-1) if self.maze[y][x] == 0]
-        # Only move if it doesn't block the only path
+        # Only move if it doesn't block the only path; use Python BFS for reliability
         for _ in range(20):
             if not wall_positions or not empty_positions:
                 break
@@ -63,10 +66,9 @@ class Maze:
             ey, ex = random.choice(empty_positions)
             self.maze[wy][wx] = 0
             self.maze[ey][ex] = 1
-            # Check if path still exists
             start = (1, 1)
             end = (self.width-2, self.height-2)
-            if self.bfs_path(start, end):
+            if self._bfs_plain(start, end):
                 from_pos = (wy, wx)
                 to_pos = (ey, ex)
                 break
@@ -75,7 +77,7 @@ class Maze:
                 self.maze[ey][ex] = 0
         # If no valid move found, do nothing
 
-    def bfs_path(self, start, goal):
+    def _bfs_plain(self, start, goal):
         queue = deque([start])
         visited = {start: None}
         while queue:
@@ -93,5 +95,31 @@ class Maze:
         while node and node in visited:
             path.append(node)
             node = visited[node]
+        path.reverse()
+        return path if path and path[0] == start else []
+
+    def bfs_path(self, start, goal):
+        if self.use_prolog and self.prolog_solver:
+            return self.prolog_solver.find_path(self.maze, start, goal, self.width, self.height)
+        
+        queue = deque([start])
+        visited = {start: None}
+        while queue:
+            current = queue.popleft()
+            if current == goal:
+                break
+            for dx, dy in DIRS:
+                nx, ny = current[0] + dx, current[1] + dy
+                if 0 <= nx < self.width and 0 <= ny < self.height:
+                    if self.maze[ny][nx] == 0 and (nx, ny) not in visited:
+                        queue.append((nx, ny))
+                        visited[(nx, ny)] = current
+        path = []
+        node = goal
+        while node and node in visited:
+            path.append(node)
+            node = visited[node]
+        path.reverse()
+        return path if path and path[0] == start else []
         path.reverse()
         return path if path and path[0] == start else []

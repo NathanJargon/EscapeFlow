@@ -3,23 +3,31 @@ import sys
 from maze_algorithm import Maze
 from sprites import PlayerSprite, ExitSprite
 
-CELL_SIZE = 40
+CELL_SIZE = 48
 MAZE_WIDTH = 15
 MAZE_HEIGHT = 10
 FPS = 10
 MOVE_WALL_INTERVAL = 60
-WHITE = (245, 245, 245)
-BLACK = (30, 30, 30)
-BLUE = (80, 180, 255)
-GREEN = (0, 200, 0)
-GRAY = (180, 180, 180)
+
+# Palette
+BG = (17, 24, 39)
+PANEL = (24, 33, 53)
+FLOOR = (232, 236, 243)
+WALL = (42, 55, 78)
+GRID = (90, 110, 140)
+PATH = (80, 180, 255)
+EXIT = (0, 200, 120)
+
+HUD_TEXT = (220, 230, 245)
+HUD_ACCENT = (120, 200, 255)
 
 class Game:
-    def __init__(self, control_scheme="arrows", difficulty=1, guide=False):
+    def __init__(self, control_scheme="arrows", difficulty=1, guide=False, use_prolog=False):
         self.control_scheme = control_scheme
         self.difficulty = difficulty
         self.guide = guide
-        self.maze = Maze(MAZE_WIDTH, MAZE_HEIGHT, difficulty)
+        self.use_prolog = use_prolog
+        self.maze = Maze(MAZE_WIDTH, MAZE_HEIGHT, difficulty, use_prolog)
         self.player = (1, 1)
         self.exit_pos = (MAZE_WIDTH-2, MAZE_HEIGHT-2)
         self.frame_count = 0
@@ -52,20 +60,41 @@ class Game:
         return None
 
     def draw_maze(self, path):
+        board_rect = pygame.Rect(0, 0, CELL_SIZE * MAZE_WIDTH, CELL_SIZE * MAZE_HEIGHT)
+        pygame.draw.rect(self.screen, PANEL, board_rect, border_radius=12)
+
         for y in range(MAZE_HEIGHT):
             for x in range(MAZE_WIDTH):
                 rect = pygame.Rect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE)
                 if self.maze.maze[y][x] == 1:
-                    pygame.draw.rect(self.screen, BLACK, rect, border_radius=8)
+                    pygame.draw.rect(self.screen, WALL, rect, border_radius=10)
                 else:
-                    pygame.draw.rect(self.screen, WHITE, rect, border_radius=8)
-                pygame.draw.rect(self.screen, GRAY, rect, 1)
-        for px, py in path:
-            rect = pygame.Rect(px*CELL_SIZE, py*CELL_SIZE, CELL_SIZE, CELL_SIZE)
-            pygame.draw.rect(self.screen, BLUE, rect, border_radius=8)
+                    pygame.draw.rect(self.screen, FLOOR, rect, border_radius=10)
+                pygame.draw.rect(self.screen, GRID, rect, 1)
+
+        if path:
+            overlay = pygame.Surface((CELL_SIZE, CELL_SIZE), pygame.SRCALPHA)
+            overlay.fill((*PATH, 90))
+            for px, py in path:
+                self.screen.blit(overlay, (px*CELL_SIZE, py*CELL_SIZE))
+
         self.exit_sprite.update(self.exit_pos)
         self.player_sprite.update(self.player)
         self.sprites.draw(self.screen)
+
+    def draw_hud(self):
+        hud_font = pygame.font.SysFont(None, 24)
+        bar_rect = pygame.Rect(0, 0, CELL_SIZE * MAZE_WIDTH, 32)
+        pygame.draw.rect(self.screen, PANEL, bar_rect)
+        info = [
+            f"Controls: {self.control_scheme.upper()}",
+            f"Difficulty: {self.difficulty}",
+            f"Guide: {'ON' if self.guide else 'OFF'}",
+            f"Algo: {'PROLOG' if self.use_prolog else 'BFS'}"
+        ]
+        text = "  |  ".join(info)
+        label = hud_font.render(text, True, HUD_TEXT)
+        self.screen.blit(label, (12, 6))
 
     def run(self):
         running = True
@@ -86,8 +115,9 @@ class Game:
                 self.maze.move_walls()
                 move_triggered = False
             path = self.maze.bfs_path(self.player, self.exit_pos) if self.guide else []
-            self.screen.fill(WHITE)
+            self.screen.fill(BG)
             self.draw_maze(path)
+            self.draw_hud()
             pygame.display.flip()
             self.clock.tick(FPS)
             if self.player == self.exit_pos:
@@ -96,8 +126,11 @@ class Game:
 
     def show_win_screen(self):
         font = pygame.font.SysFont(None, 64)
-        self.screen.fill((40, 200, 80))
+        sub_font = pygame.font.SysFont(None, 32)
+        self.screen.fill((24, 120, 90))
         text = font.render("You Escaped!", True, (255,255,255))
+        sub = sub_font.render("Returning to menu...", True, (230, 240, 240))
         self.screen.blit(text, (CELL_SIZE*4, CELL_SIZE*4))
+        self.screen.blit(sub, (CELL_SIZE*4, CELL_SIZE*4 + 48))
         pygame.display.flip()
-        pygame.time.wait(2000)
+        pygame.time.wait(1600)
