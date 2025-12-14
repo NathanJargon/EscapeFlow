@@ -16,18 +16,22 @@ class Maze:
             maze[0][x] = maze[self.height-1][x] = 1
         for y in range(self.height):
             maze[y][0] = maze[y][self.width-1] = 1
-        # Guarantee a path from start to exit
         start = (1, 1)
         end = (self.width-2, self.height-2)
         path = self._guaranteed_path(start, end)
-        wall_count = (self.width * self.height // 4) * self.difficulty
+        playable_area = (self.width - 2) * (self.height - 2)
+        max_walls = playable_area - len(path) - 5
+        wall_count = min((self.width * self.height // 4) * self.difficulty, max_walls)
         placed = 0
-        while placed < wall_count:
+        attempts = 0
+        max_attempts = wall_count * 100
+        while placed < wall_count and attempts < max_attempts:
             x = random.randint(1, self.width-2)
             y = random.randint(1, self.height-2)
             if maze[y][x] == 0 and (x, y) not in path:
                 maze[y][x] = 1
                 placed += 1
+            attempts += 1
         return maze
 
     def _guaranteed_path(self, start, end):
